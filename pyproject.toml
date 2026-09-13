@@ -1,0 +1,22 @@
+[project]
+name = "travel-companion-assignment"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "satpreet-bhatia-nagarro", email = "satpreet.bhatia@nagarro.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "chromadb>=1.5.9",
+    "langchain-text-splitters>=1.1.2",
+    "pymupdf>=1.28.2",
+    "sentence-transformers>=6.0.1",
+]
+
+[project.scripts]
+travel-companion-assignment = "travel_companion_assignment:main"
+
+[build-system]
+requires = ["uv_build>=0.12.10,<0.13.0"]
+build-backend = "uv_build"
