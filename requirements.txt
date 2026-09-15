@@ -2,3 +2,4 @@ pymupdf
 chromadb
 sentence-transformers
 langchain-text-splitters
+jsonpointer
