@@ -66,7 +66,9 @@ travel-companion-assignment/
 ├── run.py
 ├── pyproject.toml
 ├── requirements.txt
-└── README.md
+├── README.md
+├── setup.md
+└── RELEASE_NOTES.md
 ```
 
 Each source and data folder has its own `README.md` with file-level detail.
