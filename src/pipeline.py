@@ -1,4 +1,4 @@
-import asyncio
+import logging
 
 from context.manager import (
     TravelContext,
@@ -13,6 +13,9 @@ from retrieval.retriever import Retriever
 from travel_mcp.client import MCPClient
 from travel_mcp.tool_selector import MCPToolSelector
 from travel_mcp.request_router import RequestRouter
+
+
+logger = logging.getLogger(__name__)
 
 
 class TravelCompanionPipeline:
@@ -35,10 +38,10 @@ class TravelCompanionPipeline:
         top_k: int = 5,
     ) -> dict:
 
-        print("\n" + "=" * 70)
-        print("USER MESSAGE")
-        print("=" * 70)
-        print(user_message)
+        logger.info("\n" + "=" * 70)
+        logger.info("USER MESSAGE")
+        logger.info("=" * 70)
+        logger.info(user_message)
 
         # ---------------------------------------------------------
         # 1. Extract context
@@ -49,9 +52,9 @@ class TravelCompanionPipeline:
             travel_context=self.context,
         )
 
-        print("\nEXTRACTED CONTEXT")
-        print("-" * 70)
-        print(extracted_context)
+        logger.info("\nEXTRACTED CONTEXT")
+        logger.info("-" * 70)
+        logger.info(extracted_context)
 
         # ---------------------------------------------------------
         # 2. Update travel context
@@ -61,9 +64,9 @@ class TravelCompanionPipeline:
             extracted_context
         )
 
-        print("\nCURRENT TRAVEL CONTEXT")
-        print("-" * 70)
-        print(self.context.to_dict())
+        logger.info("\nCURRENT TRAVEL CONTEXT")
+        logger.info("-" * 70)
+        logger.info(self.context.to_dict())
 
         # ---------------------------------------------------------
         # 3. Contextualize query
@@ -74,9 +77,9 @@ class TravelCompanionPipeline:
             travel_context=self.context,
         )
 
-        print("\nSTANDALONE QUERY")
-        print("-" * 70)
-        print(standalone_query)
+        logger.info("\nSTANDALONE QUERY")
+        logger.info("-" * 70)
+        logger.info(standalone_query)
 
         # ---------------------------------------------------------
         # 4. Discover MCP tools
@@ -84,14 +87,15 @@ class TravelCompanionPipeline:
 
         tools = await self.mcp_client.get_tools()
 
-        print("\nAVAILABLE MCP TOOLS")
-        print("-" * 70)
+        logger.info("\nAVAILABLE MCP TOOLS")
+        logger.info("-" * 70)
 
         for tool in tools:
 
-            print(
-                f"- {tool['name']}: "
-                f"{tool.get('description', '')}"
+            logger.info(
+                "- %s: %s",
+                tool["name"],
+                tool.get("description", ""),
             )
 
         # ---------------------------------------------------------
@@ -104,9 +108,9 @@ class TravelCompanionPipeline:
             tools=tools,
         )
 
-        print("\nREQUEST ROUTE")
-        print("-" * 70)
-        print(route)
+        logger.info("\nREQUEST ROUTE")
+        logger.info("-" * 70)
+        logger.info(route)
 
         # ---------------------------------------------------------
         # 6. MCP processing
@@ -138,9 +142,9 @@ class TravelCompanionPipeline:
                 )
             )
 
-            print("\nMCP TOOL SELECTION")
-            print("-" * 70)
-            print(mcp_selection)
+            logger.info("\nMCP TOOL SELECTION")
+            logger.info("-" * 70)
+            logger.info(mcp_selection)
 
             # -----------------------------------------------------
             # Execute MCP tool
@@ -156,13 +160,17 @@ class TravelCompanionPipeline:
                     mcp_selection["arguments"]
                 )
 
-                print("\nMCP TOOL EXECUTION")
-                print("-" * 70)
-                print(
-                    f"Tool: {tool_name}"
+                logger.info("\nMCP TOOL EXECUTION")
+                logger.info("-" * 70)
+
+                logger.info(
+                    "Tool: %s",
+                    tool_name,
                 )
-                print(
-                    f"Arguments: {arguments}"
+
+                logger.info(
+                    "Arguments: %s",
+                    arguments,
                 )
 
                 mcp_result = (
@@ -172,24 +180,26 @@ class TravelCompanionPipeline:
                     )
                 )
 
-                print("\nMCP TOOL RESULT")
-                print("-" * 70)
-                print(mcp_result)
+                logger.info("\nMCP TOOL RESULT")
+                logger.info("-" * 70)
+                logger.info(mcp_result)
 
             else:
 
-                print("\nMCP TOOL EXECUTION")
-                print("-" * 70)
-                print(
+                logger.info("\nMCP TOOL EXECUTION")
+                logger.info("-" * 70)
+                logger.info(
                     "MCP was requested by the router, "
                     "but no suitable MCP tool was selected."
                 )
 
         else:
 
-            print("\nMCP TOOL EXECUTION")
-            print("-" * 70)
-            print("Skipped because route does not require MCP.")
+            logger.info("\nMCP TOOL EXECUTION")
+            logger.info("-" * 70)
+            logger.info(
+                "Skipped because route does not require MCP."
+            )
 
         # ---------------------------------------------------------
         # 7. RAG retrieval
@@ -208,10 +218,12 @@ class TravelCompanionPipeline:
                 destination=self.context.destination,
             )
 
-            print("\nRETRIEVED DOCUMENTS")
-            print("-" * 70)
-            print(
-                f"Number of results: {len(results)}"
+            logger.info("\nRETRIEVED DOCUMENTS")
+            logger.info("-" * 70)
+
+            logger.info(
+                "Number of results: %d",
+                len(results),
             )
 
             for index, result in enumerate(
@@ -219,47 +231,52 @@ class TravelCompanionPipeline:
                 start=1,
             ):
 
-                print(
-                    "\n" + "." * 70
+                logger.info(
+                    "\n%s",
+                    "." * 70,
                 )
 
-                print(
-                    f"RESULT {index}"
+                logger.info(
+                    "RESULT %d",
+                    index,
                 )
 
-                print(
-                    "." * 70
+                logger.info(
+                    "%s",
+                    "." * 70,
                 )
 
-                print(
-                    f"Source: {result['source']}"
+                logger.info(
+                    "Source: %s",
+                    result["source"],
                 )
 
-                print(
-                    f"Page: {result['page']}"
+                logger.info(
+                    "Page: %s",
+                    result["page"],
                 )
 
-                print(
-                    f"Destination: "
-                    f"{result['destination']}"
+                logger.info(
+                    "Destination: %s",
+                    result["destination"],
                 )
 
-                print(
-                    f"Distance: "
-                    f"{result['distance']}"
+                logger.info(
+                    "Distance: %s",
+                    result["distance"],
                 )
 
-                print("\nTEXT:")
+                logger.info("\nTEXT:")
 
-                print(
+                logger.info(
                     result["text"]
                 )
 
         else:
 
-            print("\nRETRIEVED DOCUMENTS")
-            print("-" * 70)
-            print(
+            logger.info("\nRETRIEVED DOCUMENTS")
+            logger.info("-" * 70)
+            logger.info(
                 "Skipped because route does not require RAG."
             )
 
@@ -273,10 +290,6 @@ class TravelCompanionPipeline:
             retrieved_documents=results,
             mcp_result=mcp_result,
         )
-
-        print("\nFINAL ANSWER")
-        print("=" * 70)
-        print(answer)
 
         # ---------------------------------------------------------
         # 9. Return complete result
@@ -293,35 +306,3 @@ class TravelCompanionPipeline:
             "results": results,
             "answer": answer,
         }
-
-
-async def main():
-
-    pipeline = TravelCompanionPipeline()
-
-    print("\nTravel Companion")
-    print("Type 'exit' or 'quit' to stop.")
-
-    while True:
-
-        user_message = input(
-            "\nYou: "
-        ).strip()
-
-        if not user_message:
-            continue
-
-        if user_message.lower() in {
-            "exit",
-            "quit",
-        }:
-            break
-
-        await pipeline.process(
-            user_message=user_message,
-            top_k=5,
-        )
-
-
-if __name__ == "__main__":
-    asyncio.run(main())

@@ -1,6 +1,7 @@
-import chromadb
+import chromadb, logging
 from sentence_transformers import SentenceTransformer
 
+logger = logging.getLogger(__name__)
 
 VECTOR_DB_DIR = "vector_db"
 COLLECTION_NAME = "tourism"
@@ -21,7 +22,8 @@ class Retriever:
         )
 
         self.embedding_model = SentenceTransformer(
-            embedding_model
+            embedding_model,
+            local_files_only=True,
         )
 
     def retrieve(
@@ -31,13 +33,31 @@ class Retriever:
         destination: str | None = None,
     ):
 
-        print("in retrieve method")
-        query_embedding = self.embedding_model.encode(query)
+        logger.debug("in retrieve method")
+        query_embedding = self.embedding_model.encode(
+            query,
+            show_progress_bar=False,
+            )
 
         query_params = {
             "query_embeddings": [query_embedding.tolist()],
             "n_results": top_k,
         }
+
+        logger.debug(
+            "Query: %s",
+            query,
+        )
+
+        logger.debug(
+            "Top K: %d",
+            top_k,
+        )
+
+        logger.debug(
+            "Destination filter: %s",
+            destination,
+        )
 
         if destination:
             query_params["where"] = {
@@ -65,26 +85,31 @@ class Retriever:
                 "distance": distance,
             })
 
+        logger.debug(
+            "Retrieved %d documents",
+            len(retrieved_documents),
+        )
+
         return retrieved_documents
 
+# can be removed.
+# if __name__ == "__main__":
+#     retriever = Retriever()
 
-if __name__ == "__main__":
-    retriever = Retriever()
+#     query = input("Ask about Singapore: ")
 
-    query = input("Ask about Singapore: ")
+#     results = retriever.retrieve(
+#         query=query,
+#         top_k=5,
+#         destination="Singapore",
+#     )
 
-    results = retriever.retrieve(
-        query=query,
-        top_k=5,
-        destination="Singapore",
-    )
-
-    for i, result in enumerate(results):
-        print("\n" + "=" * 60)
-        print(f"Result: {i + 1}")
-        print(f"Destination: {result['destination']}")
-        print(f"Source: {result['source']}")
-        print(f"Page: {result['page']}")
-        print(f"Distance: {result['distance']}")
-        print("\nText:")
-        print(result["text"])
+#     for i, result in enumerate(results):
+#         print("\n" + "=" * 60)
+#         print(f"Result: {i + 1}")
+#         print(f"Destination: {result['destination']}")
+#         print(f"Source: {result['source']}")
+#         print(f"Page: {result['page']}")
+#         print(f"Distance: {result['distance']}")
+#         print("\nText:")
+#         print(result["text"])
